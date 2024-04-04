@@ -10,4 +10,7 @@ FROM debian:12-slim
 
 COPY --from=build-stage-01 /app/spotify-convert .
 
+RUN apt update && apt install -y ca-certificates
+RUN update-ca-certificates
+
 ENTRYPOINT ["./spotify-convert"]
