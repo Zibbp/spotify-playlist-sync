@@ -4,7 +4,7 @@ RUN mkdir /app
 ADD . /app
 WORKDIR /app
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o spotify-convert main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -o spotify-convert main.go
 
 FROM debian:12-slim
 
