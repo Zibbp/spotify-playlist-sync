@@ -43,7 +43,7 @@ func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, 
 
 	queries := db.New(dbConn)
 
-	jsonConfig := config.NewJsonConfigService("./config.json")
+	jsonConfig := config.NewJsonConfigService("/data/config.json")
 	err = jsonConfig.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load Spotify config")
