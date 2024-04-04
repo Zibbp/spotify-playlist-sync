@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"os"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -100,6 +101,13 @@ func main() {
 				},
 			},
 		},
+	}
+
+	debug := os.Getenv("DEBUG")
+	if debug == "true" {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
 	if err := app.Run(os.Args); err != nil {
