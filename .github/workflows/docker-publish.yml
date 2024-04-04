@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: .
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
