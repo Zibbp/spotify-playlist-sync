@@ -54,10 +54,6 @@ func (s *Service) SpotifyToTidal() error {
 
 	// compare playlists
 	for _, spotifyPlaylist := range spotifyPlaylists {
-		if spotifyPlaylist.Name != "Cool" {
-			continue
-		}
-
 		// check if spotify playlist is in local database
 		ctx := context.Background()
 		dbPlaylist, err := s.Queries.GetPlaylistById(ctx, string(spotifyPlaylist.ID))
