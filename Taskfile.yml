@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  dev:
+    cmds:
+      - export $(grep -v '^#' .env | xargs) && go run main.go {{.CLI_ARGS}}

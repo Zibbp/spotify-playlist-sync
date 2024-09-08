@@ -18,10 +18,11 @@ func cleanName(trackName string) string {
 	return trackName
 }
 
+// durationMatch returns a boolean if the provided duration is within 2 seconds.
 func durationMatch(spotifyDuration int, tidalDuration int) bool {
 	// allow for a 2 second difference
 	log.Debug().Msgf("Spotify Duration: %d, Tidal Duration: %d", spotifyDuration, tidalDuration)
-	return spotifyDuration >= tidalDuration-2 && spotifyDuration <= tidalDuration+2
+	return spotifyDuration >= tidalDuration-5 && spotifyDuration <= tidalDuration+5
 }
 
 func nameMatch(spotifyName string, tidalName string) bool {
@@ -46,6 +47,8 @@ func artistMatch(spotifyArtists []string, tidalArtists []string) bool {
 	return true
 }
 
+// spotifyToTidalTrack attempts to find the provided spotify track on Tidal.
+// Tracks are checed by ISRC first, falling back to a more crude title/album/artist search
 func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tidal.OpenAPITrackResource, error) {
 	spotifyIsrc := spotifyTrack.ExternalIDs["isrc"]
 	if spotifyIsrc != "" {
@@ -53,7 +56,7 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 		tidalTrack, err := s.TidalService.GetTrackByISRC(spotifyIsrc)
 		if err != nil {
 			if err.Error() == "track not found" {
-				log.Warn().Msgf("Track not found via ISRC: %s - %s (%s)", spotifyTrack.ID, spotifyTrack.Name, spotifyIsrc)
+				log.Warn().Str("platform", "tidal").Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("spotify_track_isrc", spotifyIsrc).Msgf("track not found via")
 				// continue
 			} else {
 				return nil, err
@@ -70,15 +73,16 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 		spotifyArtists = append(spotifyArtists, artist.Name)
 	}
 
+	// create a clean track name
 	spotifyName := cleanName(spotifyTrack.Name)
 	// spotifyDuration := spotifyTrack.Duration
 
 	spotifyAlbum := spotifyTrack.Album.Name
 
-	// search #1
+	// search #1 using the track and and album
 	query := fmt.Sprintf("%s %s", spotifyName, spotifyAlbum)
 
-	log.Debug().Msgf("Searching for track: %s", query)
+	log.Debug().Str("platform", "tidal").Str("query", query).Msg("searching for track")
 
 	tidalSearch, err := s.TidalService.SearchTrack(
 		query,
@@ -91,23 +95,24 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 		return nil, err
 	}
 
+	// iterate over list of tidal results to check if we have a match
 	for _, tidalTrack := range tidalSearch.Tracks {
 		// check if we have a match
-
 		tidalArtists := make([]string, 0)
 		for _, artist := range tidalTrack.Resource.Artists {
 			tidalArtists = append(tidalArtists, artist.Name)
 		}
 
+		// check if track meets basic checks
 		if nameMatch(spotifyName, tidalTrack.Resource.Title) && artistMatch(spotifyArtists, tidalArtists) && durationMatch(int((spotifyTrack.Duration/1000)), tidalTrack.Resource.Duration) {
 			return &tidalTrack.Resource, nil
 		}
 	}
 
-	// search #2
+	// search #2 using the track name and first artist
 	query = fmt.Sprintf("%s %s", spotifyName, spotifyArtists[0])
 
-	log.Debug().Msgf("Searching for track: %s", query)
+	log.Debug().Str("platform", "tidal").Str("query", query).Msg("searching for track")
 
 	tidalSearch, err = s.TidalService.SearchTrack(
 		query,
@@ -120,14 +125,16 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 		return nil, err
 	}
 
+	// iterate over list of tidal results to check if we have a match
 	for _, tidalTrack := range tidalSearch.Tracks {
-		// check if we have a match
 
+		// check if we have a match
 		tidalArtists := make([]string, 0)
 		for _, artist := range tidalTrack.Resource.Artists {
 			tidalArtists = append(tidalArtists, artist.Name)
 		}
 
+		// check if track meets basic checks
 		if nameMatch(spotifyName, tidalTrack.Resource.Title) && artistMatch(spotifyArtists, tidalArtists) && durationMatch(int((spotifyTrack.Duration/1000)), tidalTrack.Resource.Duration) {
 			return &tidalTrack.Resource, nil
 		}

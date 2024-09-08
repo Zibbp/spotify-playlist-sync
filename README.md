@@ -4,7 +4,7 @@ Convert Spotify playlists to a different service. Currently only supports Tidal.
 
 ## Development
 
-`.env.dev`
+`.env`
 
 ```
 SPOTIFY_CLIENT_ID=123
