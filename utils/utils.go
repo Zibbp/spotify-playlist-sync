@@ -22,3 +22,14 @@ func WriteMissingTracks(filename string, playlist interface{}, tracks interface{
 	}
 	return os.WriteFile(fmt.Sprintf("/data/missing/%s.json", filename), json, 0644)
 }
+
+func WriteTidalPlaylist(filename string, playlist interface{}) error {
+	if err := os.MkdirAll("/data/tidal", 0755); err != nil {
+		return err
+	}
+	json, err := json.Marshal(playlist)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(fmt.Sprintf("/data/tidal/%s.json", filename), json, 0644)
+}

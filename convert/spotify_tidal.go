@@ -203,6 +203,23 @@ func (s *Service) SpotifyToTidal() error {
 			}
 		}
 
+		// fetch fresh tidal playlist to save to disk
+		tPlaylist, err := s.TidalService.GetPlaylist(tidalPlaylist.UUID)
+		if err != nil {
+			return err
+		}
+		tPlaylistTracks, err := s.TidalService.GetPlaylistTracks(tidalPlaylist.UUID)
+		if err != nil {
+			return err
+		}
+		for _, tidalTrack := range tPlaylistTracks.Items {
+			tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
+		}
+		err = utils.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
