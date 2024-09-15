@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/zibbp/spotify-playlist-convert/config"
 	"github.com/zibbp/spotify-playlist-convert/db"
+	"github.com/zibbp/spotify-playlist-convert/navidrome"
 	"github.com/zibbp/spotify-playlist-convert/spotify"
 	"github.com/zibbp/spotify-playlist-convert/tidal"
 	"github.com/zibbp/spotify-playlist-convert/utils"
@@ -216,6 +218,27 @@ func (s *Service) SpotifyToTidal() error {
 			tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
 		}
 		err = utils.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist)
+		if err != nil {
+			return err
+		}
+
+		navidromePlaylist := navidrome.Playlist{
+			Name:        spotifyPlaylist.Name,
+			Description: spotifyPlaylist.Description,
+		}
+
+		for _, track := range tPlaylist.Tracks {
+			navidromePlaylist.Tracks = append(navidromePlaylist.Tracks, navidrome.Track{
+				ID:       strconv.FormatInt(track.ID, 10),
+				Title:    track.Title,
+				Album:    track.Album.Title,
+				Artist:   track.Artist.Name,
+				Duration: track.Duration,
+				ISRC:     track.Isrc,
+			})
+		}
+
+		err = navidrome.WriteNavidromePlaylist(fmt.Sprintf("%s", tPlaylist.UUID), navidromePlaylist)
 		if err != nil {
 			return err
 		}
