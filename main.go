@@ -11,11 +11,11 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/zibbp/spotify-playlist-convert/config"
-	"github.com/zibbp/spotify-playlist-convert/convert"
-	"github.com/zibbp/spotify-playlist-convert/db"
-	"github.com/zibbp/spotify-playlist-convert/spotify"
-	"github.com/zibbp/spotify-playlist-convert/tidal"
+	"github.com/zibbp/spotify-playlist-sync/config"
+	"github.com/zibbp/spotify-playlist-sync/convert"
+	"github.com/zibbp/spotify-playlist-sync/db"
+	"github.com/zibbp/spotify-playlist-sync/spotify"
+	"github.com/zibbp/spotify-playlist-sync/tidal"
 
 	"github.com/urfave/cli/v2"
 )
@@ -24,6 +24,9 @@ import (
 var ddl string
 
 func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, *db.Queries) {
+	ctx := context.Background()
+
+	// initialize config
 	c, err := config.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
@@ -35,26 +38,26 @@ func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, 
 		log.Fatal().Err(err).Msg("Failed to open database")
 	}
 
-	ctx := context.Background()
-
 	// create tables
 	if _, err := dbConn.ExecContext(ctx, ddl); err != nil {
 		log.Fatal().Err(err).Msg("Failed to create tables")
 	}
-
 	queries := db.New(dbConn)
 
+	// load json config which has credentials
 	jsonConfig := config.NewJsonConfigService("/data/config.json")
 	err = jsonConfig.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load Spotify config")
 	}
 
+	// initialize the spotify connection
 	spotifyService, err := spotify.Initialize(c.SpotifyClientId, c.SpotifyClientSecret, c.SpotifyRedirectUri, jsonConfig)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize Spotify service")
 	}
 
+	// authenticate with spotify
 	err = spotifyService.Authenticate()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to authenticate with Spotify")
@@ -64,13 +67,34 @@ func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, 
 }
 
 func main() {
+	var saveMissingTracks bool
+	var saveTidalPlaylist bool
+	var saveNavidromePlaylist bool
+
 	app := &cli.App{
-		Name:  "spotify-convert",
-		Usage: "convert spotify playlists to other services",
+		Name:  "spotify-playlist-sync",
+		Usage: "sync spotify playlists to other services",
 		Commands: []*cli.Command{
 			{
 				Name:  "tidal",
-				Usage: "convert playlists to tidal",
+				Usage: "sync playlists to tidal",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:        "save-missing-tracks",
+						Usage:       "Save missing tracks during the conversion",
+						Destination: &saveMissingTracks,
+					},
+					&cli.BoolFlag{
+						Name:        "save-tidal-playlist",
+						Usage:       "Save the tidal playlist",
+						Destination: &saveTidalPlaylist,
+					},
+					&cli.BoolFlag{
+						Name:        "save-navidrome-playlist",
+						Usage:       "Save a version of the tidal playlist for importing in Navidrome",
+						Destination: &saveNavidromePlaylist,
+					},
+				},
 				Action: func(cCtx *cli.Context) error {
 					c, jsonConfigService, spotifyService, queries := initialize()
 
@@ -86,13 +110,12 @@ func main() {
 					}
 
 					// convert
-
 					convertService, err := convert.Initialize(spotifyService, tidalService, jsonConfigService, queries)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to initialize convert service")
 					}
 
-					err = convertService.SpotifyToTidal()
+					err = convertService.SpotifyToTidal(saveMissingTracks, saveTidalPlaylist, saveMissingTracks)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to convert Spotify to Tidal")
 					}
@@ -108,6 +131,11 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
+
+	container := os.Getenv("CONTAINER")
+	if container != "true" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	if err := app.Run(os.Args); err != nil {

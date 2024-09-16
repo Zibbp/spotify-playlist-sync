@@ -1,16 +1,16 @@
-FROM golang:1 AS build-stage-01
+FROM golang:1.22 AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o spotify-convert main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -o spotify-playlist-convert main.go
 
 FROM debian:12-slim
 
-COPY --from=build-stage-01 /app/spotify-convert .
+COPY --from=build-stage-01 /app/spotify-playlist-convert .
 
 RUN apt update && apt install -y ca-certificates
 RUN update-ca-certificates
 
-ENTRYPOINT ["./spotify-convert"]
+ENTRYPOINT ["./spotify-playlist-convert"]

@@ -7,16 +7,15 @@ name: Docker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
 
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-
 
 jobs:
   build:
@@ -31,11 +30,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up BuildKit Docker container builder to be able to build
-      # multi-platform images and export cache
-      # https://github.com/docker/setup-buildx-action
+      # Set up QEMU for Arm64
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Set up Docker Buildx
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3 
+        uses: docker/setup-buildx-action@v3
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -54,16 +55,18 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=dev
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v5
+      - name: Build and push
+        uses: docker/build-push-action@v6
         with:
-          context: .
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max

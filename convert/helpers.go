@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zibbp/spotify-playlist-convert/tidal"
+	"github.com/zibbp/spotify-playlist-sync/tidal"
 
 	"github.com/rs/zerolog/log"
 	spotifyPkg "github.com/zmb3/spotify/v2"

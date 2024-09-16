@@ -3,7 +3,7 @@ package spotify
 import (
 	"context"
 
-	"github.com/zibbp/spotify-playlist-convert/config"
+	"github.com/zibbp/spotify-playlist-sync/config"
 
 	spotifyPkg "github.com/zmb3/spotify/v2"
 )

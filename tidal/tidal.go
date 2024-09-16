@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zibbp/spotify-playlist-convert/config"
+	"github.com/zibbp/spotify-playlist-sync/config"
 
 	"github.com/rs/zerolog/log"
 )

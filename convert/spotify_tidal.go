@@ -8,12 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zibbp/spotify-playlist-convert/config"
-	"github.com/zibbp/spotify-playlist-convert/db"
-	"github.com/zibbp/spotify-playlist-convert/navidrome"
-	"github.com/zibbp/spotify-playlist-convert/spotify"
-	"github.com/zibbp/spotify-playlist-convert/tidal"
-	"github.com/zibbp/spotify-playlist-convert/utils"
+	"github.com/zibbp/spotify-playlist-sync/config"
+	"github.com/zibbp/spotify-playlist-sync/db"
+	"github.com/zibbp/spotify-playlist-sync/navidrome"
+	"github.com/zibbp/spotify-playlist-sync/spotify"
+	"github.com/zibbp/spotify-playlist-sync/tidal"
 	libSpotify "github.com/zmb3/spotify/v2"
 
 	"github.com/rs/zerolog/log"
@@ -36,7 +35,8 @@ func Initialize(spotifyService *spotify.Service, tidalService *tidal.Service, co
 	return &s, nil
 }
 
-func (s *Service) SpotifyToTidal() error {
+// SpotifyToTidal converts a user's Spotify playlists to Tidal playlists.
+func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool, saveNavidromePlaylist bool) error {
 	log.Info().Msg("Starting Spotify to Tidal conversion")
 
 	// get all playlists from Spotify
@@ -197,50 +197,70 @@ func (s *Service) SpotifyToTidal() error {
 		}
 
 		// write missing tracks to file
-		if len(missingTracks) > 0 {
+		if saveMissingTracks && (len(missingTracks) > 0) {
 			log.Info().Str("spotify_playlist", spotifyPlaylist.Name).Msgf("processing complete - found %d missing tracks", len(missingTracks))
-			err := utils.WriteMissingTracks(fmt.Sprintf("%s", spotifyPlaylist.ID), spotifyPlaylist, missingTracks)
+			err := spotify.WriteMissingTracks(fmt.Sprintf("%s", spotifyPlaylist.ID), spotify.MissingTracks{
+				Playlist: spotifyPlaylist,
+				Tracks:   missingTracks,
+			})
 			if err != nil {
 				return err
 			}
 		}
 
-		// fetch fresh tidal playlist to save to disk
-		tPlaylist, err := s.TidalService.GetPlaylist(tidalPlaylist.UUID)
-		if err != nil {
-			return err
-		}
-		tPlaylistTracks, err := s.TidalService.GetPlaylistTracks(tidalPlaylist.UUID)
-		if err != nil {
-			return err
-		}
-		for _, tidalTrack := range tPlaylistTracks.Items {
-			tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
-		}
-		err = utils.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist)
-		if err != nil {
-			return err
-		}
-
-		navidromePlaylist := navidrome.Playlist{
-			Name:        spotifyPlaylist.Name,
-			Description: spotifyPlaylist.Description,
+		if saveTidalPlaylist {
+			// fetch fresh tidal playlist to save to disk
+			tPlaylist, err := s.TidalService.GetPlaylist(tidalPlaylist.UUID)
+			if err != nil {
+				return err
+			}
+			tPlaylistTracks, err := s.TidalService.GetPlaylistTracks(tidalPlaylist.UUID)
+			if err != nil {
+				return err
+			}
+			for _, tidalTrack := range tPlaylistTracks.Items {
+				tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
+			}
+			err = tidal.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist)
+			if err != nil {
+				return err
+			}
 		}
 
-		for _, track := range tPlaylist.Tracks {
-			navidromePlaylist.Tracks = append(navidromePlaylist.Tracks, navidrome.Track{
-				ID:       strconv.FormatInt(track.ID, 10),
-				Title:    track.Title,
-				Album:    track.Album.Title,
-				Artist:   track.Artist.Name,
-				Duration: track.Duration,
-				ISRC:     track.Isrc,
-			})
-		}
+		if saveNavidromePlaylist {
+			tPlaylist, err := s.TidalService.GetPlaylist(tidalPlaylist.UUID)
+			if err != nil {
+				return err
+			}
 
-		err = navidrome.WriteNavidromePlaylist(fmt.Sprintf("%s", tPlaylist.UUID), navidromePlaylist)
-		if err != nil {
-			return err
+			tPlaylistTracks, err := s.TidalService.GetPlaylistTracks(tidalPlaylist.UUID)
+			if err != nil {
+				return err
+			}
+			for _, tidalTrack := range tPlaylistTracks.Items {
+				tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
+			}
+
+			navidromePlaylist := navidrome.Playlist{
+				Name:        spotifyPlaylist.Name,
+				Description: spotifyPlaylist.Description,
+			}
+
+			for _, track := range tPlaylist.Tracks {
+				navidromePlaylist.Tracks = append(navidromePlaylist.Tracks, navidrome.Track{
+					ID:       strconv.FormatInt(track.ID, 10),
+					Title:    track.Title,
+					Album:    track.Album.Title,
+					Artist:   track.Artist.Name,
+					Duration: track.Duration,
+					ISRC:     track.Isrc,
+				})
+			}
+
+			err = navidrome.WriteNavidromePlaylist(fmt.Sprintf("%s", tPlaylist.UUID), navidromePlaylist)
+			if err != nil {
+				return err
+			}
 		}
 
 	}

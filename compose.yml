@@ -1,0 +1,16 @@
+services:
+  spotify-playlist-convert:
+    image: ghcr.io/zibbp/spotify-playlist-convert:latest
+    volumes:
+      - ./data:/data
+    ports:
+      - 28542:28542 # required for oauth callback
+    environment:
+      - TZ=America/Chicago
+      - DEBUG=true
+      - SPOTIFY_CLIENT_ID=
+      - SPOTIFY_CLIENT_SECRET=
+      - SPOTIFY_CLIENT_REDIRECT_URI=http://SERVERIP:28542/callback
+      - TIDAL_CLIENT_ID=
+      - TIDAL_CLIENT_SECRET==
+    command: tidal --save-missing-tracks --save-tidal-playlist
