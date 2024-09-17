@@ -37,7 +37,8 @@ Options
 
 - Save missing tracks writes all missing Spotify tracks to `/data/missing/<spotify_playlist_id>.json`.
 - Save Tidal playlist writes the Tidal playlist to `/data/tidal/<tidal_playlist_id>.json`.
-- Save Navidrome playlist writes the Tidal playlist in a special format for [importing into Navidrome](https://github.com/Zibbp/navidrome-utils).   
+- Save Navidrome playlist writes the Tidal playlist in a special format for [importing into Navidrome](https://github.com/Zibbp/navidrome-utils).
+   - Note that is not supported yet. It requires the `isrc` to be avilable in Navidrome's database which [is a work-in-progres](https://github.com/navidrome/navidrome/pull/2709).
 
 ### Docker
 
