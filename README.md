@@ -25,6 +25,10 @@ Tidal has aggressive rate limits so a one-second sleep runs after every conversi
 
 Run the application with `-h` to see a list of commands. Currently only a `tidal` command exists which converts your Spotifyp playlists to Tidal playlists.
 
+```bash
+docker run --rm ghcr.io/zibbp/spotify-playlist-sync:latest -h
+```
+
 #### Tidal
 
 Options
