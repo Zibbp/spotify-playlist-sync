@@ -1,5 +1,5 @@
 services:
-  spotify-playlist-convert:
+  spotify-playlist-sync:
     image: ghcr.io/zibbp/spotify-playlist-sync:latest
     volumes:
       - ./data:/data
