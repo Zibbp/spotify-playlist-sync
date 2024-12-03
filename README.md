@@ -55,7 +55,7 @@ Docker is the recommended way to run the application. See [compose.yml](compose.
 
 ## Development
 
-Create a `.env` file with the below variables. Then use [task](https://taskfile.dev/) to run with `task dev`.
+Create a `.env` file with the below variables. Then use [task](https://taskfile.dev/) to run with `task dev -- tidal`.
 
 ```
 SPOTIFY_CLIENT_ID=123
