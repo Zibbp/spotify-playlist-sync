@@ -71,6 +71,7 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 
 		if dbPlaylist == "" {
 			log.Warn().Str("name", spotifyPlaylist.Name).Str("id", spotifyPlaylist.ID.String()).Msgf("playlist is empty, skipping")
+			continue
 		}
 
 		// get all local database tracks
