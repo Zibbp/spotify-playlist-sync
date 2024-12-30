@@ -155,6 +155,11 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 
 		// loop over each spotify track to convert
 		for _, spotifyTrack := range spotifyTracks {
+			if spotifyTrack == nil {
+				log.Debug().Msg("skipping empty track")
+				continue
+			}
+
 			// check if track is already in playlist using db
 			if _, ok := dbPlaylistTrackMap[spotifyTrack.ID.String()]; ok {
 				log.Debug().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Msgf("track is already in playlist according to database")
