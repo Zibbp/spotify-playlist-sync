@@ -18,7 +18,8 @@
         "mtxr.sqltools",
         "eamodio.gitlens",
         "golang.go",
-        "mtxr.sqltools-driver-sqlite"
+        "mtxr.sqltools-driver-sqlite",
+        "github.vscode-github-actions"
       ]
     }
   }

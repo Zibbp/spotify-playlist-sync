@@ -7,9 +7,11 @@ import (
 )
 
 type Playlist struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Tracks      []Track `json:"tracks"`
+	SourceId      string  `json:"source_id"`
+	DestinationId string  `json:"destination_id"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	Tracks        []Track `json:"tracks"`
 }
 
 type Track struct {

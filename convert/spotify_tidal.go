@@ -248,8 +248,10 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 			}
 
 			navidromePlaylist := navidrome.Playlist{
-				Name:        spotifyPlaylist.Name,
-				Description: spotifyPlaylist.Description,
+				SourceId:      spotifyPlaylist.ID.String(),
+				DestinationId: tidalPlaylist.UUID,
+				Name:          spotifyPlaylist.Name,
+				Description:   spotifyPlaylist.Description,
 			}
 
 			for _, track := range tPlaylist.Tracks {
