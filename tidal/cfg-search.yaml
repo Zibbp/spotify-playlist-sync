@@ -1,0 +1,8 @@
+package: tidal_search
+generate:
+  client: true
+  models: true
+output: search/openapi_search.gen.go
+output-options:
+  # to make sure that all types are generated
+  skip-prune: true

@@ -1,0 +1,8 @@
+package: tidal_tracks
+generate:
+  client: true
+  models: true
+output: tracks/openapi_tracks.gen.go
+output-options:
+  # to make sure that all types are generated
+  skip-prune: true

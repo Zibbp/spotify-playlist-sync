@@ -94,9 +94,16 @@ func main() {
 						Usage:       "Save a version of the tidal playlist for importing in Navidrome",
 						Destination: &saveNavidromePlaylist,
 					},
+					&cli.StringSliceFlag{
+						Name:    "spotify-playlist-id",
+						Aliases: []string{"spi"},
+						Usage:   "List of Spotify playlist IDs to sync. Defaults to all user playlists if not provided.",
+					},
 				},
 				Action: func(cCtx *cli.Context) error {
 					c, jsonConfigService, spotifyService, queries := initialize()
+
+					spotifyPlaylistIDs := cCtx.StringSlice("spotify-playlist-id")
 
 					tidalService, err := tidal.Initialize(c.TidalClientId, c.TidalClientSecret, jsonConfigService)
 					if err != nil {
@@ -115,7 +122,7 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to initialize convert service")
 					}
 
-					err = convertService.SpotifyToTidal(saveMissingTracks, saveTidalPlaylist, saveMissingTracks)
+					err = convertService.SpotifyToTidal(cCtx.Context, saveMissingTracks, saveTidalPlaylist, saveMissingTracks, spotifyPlaylistIDs)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to convert Spotify to Tidal")
 					}
