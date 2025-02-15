@@ -37,7 +37,7 @@ func Initialize(spotifyService *spotify.Service, tidalService *tidal.Service, co
 }
 
 // SpotifyToTidal converts a user's Spotify playlists to Tidal playlists.
-func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool, saveNavidromePlaylist bool, spotifyPlaylistIDs []string) error {
+func (s *Service) SpotifyToTidal(ctx context.Context, saveMissingTracks bool, saveTidalPlaylist bool, saveNavidromePlaylist bool, spotifyPlaylistIDs []string) error {
 	log.Info().Msg("Starting Spotify to Tidal conversion")
 
 	// get all playlists from Spotify
@@ -65,7 +65,6 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 		}
 
 		// check if spotify playlist is in local database
-		ctx := context.Background()
 		dbPlaylist, err := s.Queries.GetPlaylistById(ctx, string(spotifyPlaylist.ID))
 		if err == sql.ErrNoRows {
 			// create new playlist
@@ -175,7 +174,7 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 			}
 
 			// attempt to find track
-			tidalTrack, err := s.spotifyToTidalTrack(spotifyTrack)
+			tidalTrack, err := s.spotifyToTidalTrack(ctx, spotifyTrack)
 			if err != nil {
 				log.Error().Err(err).Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("spotify_track_isrc", spotifyTrack.ExternalIDs["isrc"]).Msgf("failed to find track on Tidal")
 				missingTracks = append(missingTracks, spotifyTrack)

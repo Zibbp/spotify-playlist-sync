@@ -122,7 +122,7 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to initialize convert service")
 					}
 
-					err = convertService.SpotifyToTidal(saveMissingTracks, saveTidalPlaylist, saveMissingTracks, spotifyPlaylistIDs)
+					err = convertService.SpotifyToTidal(cCtx.Context, saveMissingTracks, saveTidalPlaylist, saveMissingTracks, spotifyPlaylistIDs)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to convert Spotify to Tidal")
 					}

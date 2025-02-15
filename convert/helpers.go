@@ -51,11 +51,11 @@ func artistMatch(spotifyArtists []string, tidalArtists []string) bool {
 
 // spotifyToTidalTrack attempts to find the provided spotify track on Tidal.
 // Tracks are checed by ISRC first, falling back to a more crude title/album/artist search
-func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tidal_tracks.TracksResource, error) {
+func (s *Service) spotifyToTidalTrack(ctx context.Context, spotifyTrack *spotifyPkg.FullTrack) (*tidal_tracks.TracksResource, error) {
 	spotifyIsrc := spotifyTrack.ExternalIDs["isrc"]
 	if spotifyIsrc != "" {
 		// attempt to find the track using the ISRC
-		tidalTrack, err := s.TidalService.GetTrackByISRCv2(context.Background(), spotifyIsrc)
+		tidalTrack, err := s.TidalService.GetTrackByISRCv2(ctx, spotifyIsrc)
 		if err != nil {
 			if err.Error() == "track not found" {
 				log.Warn().Str("platform", "tidal").Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("spotify_track_isrc", spotifyIsrc).Msgf("track not found via")
@@ -87,7 +87,7 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 	log.Debug().Str("platform", "tidal").Str("query", query).Msg("searching for track")
 
 	tidalSearch, err := s.TidalService.SearchTrackv2(
-		context.Background(),
+		ctx,
 		query,
 		"US",
 	)
@@ -117,7 +117,7 @@ func (s *Service) spotifyToTidalTrack(spotifyTrack *spotifyPkg.FullTrack) (*tida
 	log.Debug().Str("platform", "tidal").Str("query", query).Msg("searching for track")
 
 	tidalSearch, err = s.TidalService.SearchTrackv2(
-		context.Background(),
+		ctx,
 		query,
 		"US",
 	)
