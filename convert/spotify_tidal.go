@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/spotify-playlist-sync/spotify"
 	"github.com/zibbp/spotify-playlist-sync/tidal"
 	libSpotify "github.com/zmb3/spotify/v2"
+	"golang.org/x/exp/slices"
 
 	"github.com/rs/zerolog/log"
 )
@@ -36,7 +37,7 @@ func Initialize(spotifyService *spotify.Service, tidalService *tidal.Service, co
 }
 
 // SpotifyToTidal converts a user's Spotify playlists to Tidal playlists.
-func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool, saveNavidromePlaylist bool) error {
+func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool, saveNavidromePlaylist bool, spotifyPlaylistIDs []string) error {
 	log.Info().Msg("Starting Spotify to Tidal conversion")
 
 	// get all playlists from Spotify
@@ -56,6 +57,13 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 
 	// compare playlists
 	for _, spotifyPlaylist := range spotifyPlaylists {
+		if len(spotifyPlaylistIDs) > 0 {
+			if !slices.Contains(spotifyPlaylistIDs, string(spotifyPlaylist.ID)) {
+				log.Debug().Str("spotify_playlist_id", string(spotifyPlaylist.ID)).Str("spotify_playlist_name", spotifyPlaylist.Name).Msg("skipping playlist")
+				continue
+			}
+		}
+
 		// check if spotify playlist is in local database
 		ctx := context.Background()
 		dbPlaylist, err := s.Queries.GetPlaylistById(ctx, string(spotifyPlaylist.ID))
@@ -169,7 +177,7 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 			// attempt to find track
 			tidalTrack, err := s.spotifyToTidalTrack(spotifyTrack)
 			if err != nil {
-				log.Error().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Msgf("failed to find track on Tidal")
+				log.Error().Err(err).Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("spotify_track_isrc", spotifyTrack.ExternalIDs["isrc"]).Msgf("failed to find track on Tidal")
 				missingTracks = append(missingTracks, spotifyTrack)
 				continue
 			}
@@ -181,10 +189,10 @@ func (s *Service) SpotifyToTidal(saveMissingTracks bool, saveTidalPlaylist bool,
 			}
 
 			// add track to playlist
-			log.Info().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("tidal_playlist_id", tidalPlaylist.UUID).Str("tidal_track_id", tidalTrack.ID).Msgf("adding track to tidal playlist")
-			err = s.TidalService.AddTrackToPlaylist(tidalPlaylist.UUID, tidalTrack.ID)
+			log.Info().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("tidal_playlist_id", tidalPlaylist.UUID).Str("tidal_track_id", tidalTrack.Id).Msgf("adding track to tidal playlist")
+			err = s.TidalService.AddTrackToPlaylist(tidalPlaylist.UUID, tidalTrack.Id)
 			if err != nil {
-				log.Error().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("tidal_playlist_id", tidalPlaylist.UUID).Str("tidal_track_id", tidalTrack.ID).Msgf("error adding track to playlist")
+				log.Error().Str("spotify_track_id", spotifyTrack.ID.String()).Str("spotify_track_name", spotifyTrack.Name).Str("tidal_playlist_id", tidalPlaylist.UUID).Str("tidal_track_id", tidalTrack.Id).Msgf("error adding track to playlist")
 				continue
 			}
 
