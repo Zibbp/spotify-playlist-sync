@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/zibbp/spotify-playlist-sync/config"
 )
 
 type Playlist struct {
@@ -23,13 +25,13 @@ type Track struct {
 	ISRC     string `json:"isrc"`
 }
 
-func WriteNavidromePlaylist(filename string, playlist interface{}) error {
-	if err := os.MkdirAll("/data/navidrome", 0755); err != nil {
+func WriteNavidromePlaylist(filename string, playlist interface{}, config *config.Config) error {
+	if err := os.MkdirAll(config.DataPath+"/navidrome", 0755); err != nil {
 		return err
 	}
 	json, err := json.Marshal(playlist)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(fmt.Sprintf("/data/navidrome/%s.json", filename), json, 0644)
+	return os.WriteFile(fmt.Sprintf(config.DataPath+"/navidrome/%s.json", filename), json, 0644)
 }

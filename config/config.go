@@ -14,6 +14,7 @@ type Config struct {
 	SpotifyRedirectUri  string `env:"SPOTIFY_CLIENT_REDIRECT_URI, default=http://localhost:28542/callback"`
 	TidalClientId       string `env:"TIDAL_CLIENT_ID, required"`
 	TidalClientSecret   string `env:"TIDAL_CLIENT_SECRET, required"`
+	DataPath            string `env:"DATA_PATH, default=/data"`
 }
 
 func Init() (*Config, error) {
