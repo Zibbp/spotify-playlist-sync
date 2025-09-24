@@ -7,18 +7,20 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/zibbp/spotify-playlist-sync/config"
 )
 
 // WriteTidalPlaylist writes Tidal playlist to disk
-func WriteTidalPlaylist(filename string, playlist *Playlist) error {
-	if err := os.MkdirAll("/data/tidal", 0755); err != nil {
+func WriteTidalPlaylist(filename string, playlist *Playlist, config config.Config) error {
+	if err := os.MkdirAll(config.DataPath+"/tidal", 0755); err != nil {
 		return err
 	}
 	json, err := json.Marshal(playlist)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(fmt.Sprintf("/data/tidal/%s.json", filename), json, 0644)
+	return os.WriteFile(fmt.Sprintf(config.DataPath+"/tidal/%s.json", filename), json, 0644)
 }
 
 // parseISODuration converts an ISO 8601 duration (e.g., "P30M5S") to time.Duration

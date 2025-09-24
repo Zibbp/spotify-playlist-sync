@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zibbp/spotify-playlist-sync/config"
 	libSpotify "github.com/zmb3/spotify/v2"
 )
 
@@ -14,13 +15,13 @@ type MissingTracks struct {
 }
 
 // WriteMissingTracks writes missing tracks Spotify playlist tracks to disk
-func WriteMissingTracks(filename string, missingTracks MissingTracks) error {
-	if err := os.MkdirAll("/data/missing", 0755); err != nil {
+func WriteMissingTracks(filename string, missingTracks MissingTracks, config config.Config) error {
+	if err := os.MkdirAll(config.DataPath+"/missing", 0755); err != nil {
 		return err
 	}
 	json, err := json.Marshal(missingTracks)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(fmt.Sprintf("/data/missing/%s.json", filename), json, 0644)
+	return os.WriteFile(fmt.Sprintf(config.DataPath+"/missing/%s.json", filename), json, 0644)
 }

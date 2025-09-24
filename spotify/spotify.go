@@ -11,17 +11,19 @@ import (
 type Service struct {
 	client            *spotifyPkg.Client
 	config            *config.JsonConfigService
+	EnvConfig         *config.Config
 	clientId          string
 	clientSecret      string
 	clientRedirectUri string
 }
 
-func Initialize(clientId, clientSecret, clientRedirectUri string, config *config.JsonConfigService) (*Service, error) {
+func Initialize(clientId, clientSecret, clientRedirectUri string, config *config.JsonConfigService, envConfig *config.Config) (*Service, error) {
 	var s Service
 	s.clientId = clientId
 	s.clientSecret = clientSecret
 	s.clientRedirectUri = clientRedirectUri
 	s.config = config
+	s.EnvConfig = envConfig
 
 	return &s, nil
 }

@@ -215,7 +215,7 @@ func (s *Service) SpotifyToTidal(ctx context.Context, saveMissingTracks bool, sa
 			err := spotify.WriteMissingTracks(fmt.Sprintf("%s", spotifyPlaylist.ID), spotify.MissingTracks{
 				Playlist: spotifyPlaylist,
 				Tracks:   missingTracks,
-			})
+			}, *s.SpotifyService.EnvConfig)
 			if err != nil {
 				return err
 			}
@@ -234,7 +234,7 @@ func (s *Service) SpotifyToTidal(ctx context.Context, saveMissingTracks bool, sa
 			for _, tidalTrack := range tPlaylistTracks.Items {
 				tPlaylist.Tracks = append(tPlaylist.Tracks, tidalTrack)
 			}
-			err = tidal.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist)
+			err = tidal.WriteTidalPlaylist(fmt.Sprintf("%s", tPlaylist.UUID), tPlaylist, *s.SpotifyService.EnvConfig)
 			if err != nil {
 				return err
 			}
@@ -272,7 +272,7 @@ func (s *Service) SpotifyToTidal(ctx context.Context, saveMissingTracks bool, sa
 				})
 			}
 
-			err = navidrome.WriteNavidromePlaylist(fmt.Sprintf("%s", tPlaylist.UUID), navidromePlaylist)
+			err = navidrome.WriteNavidromePlaylist(fmt.Sprintf("%s", tPlaylist.UUID), navidromePlaylist, s.SpotifyService.EnvConfig)
 			if err != nil {
 				return err
 			}

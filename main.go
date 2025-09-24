@@ -33,7 +33,7 @@ func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, 
 	}
 
 	// database
-	dbConn, err := sql.Open("sqlite3", "/data/tracks.db")
+	dbConn, err := sql.Open("sqlite3", c.DataPath+"/tracks.db")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to open database")
 	}
@@ -45,14 +45,14 @@ func initialize() (*config.Config, *config.JsonConfigService, *spotify.Service, 
 	queries := db.New(dbConn)
 
 	// load json config which has credentials
-	jsonConfig := config.NewJsonConfigService("/data/config.json")
+	jsonConfig := config.NewJsonConfigService(c.DataPath + "/config.json")
 	err = jsonConfig.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load Spotify config")
 	}
 
 	// initialize the spotify connection
-	spotifyService, err := spotify.Initialize(c.SpotifyClientId, c.SpotifyClientSecret, c.SpotifyRedirectUri, jsonConfig)
+	spotifyService, err := spotify.Initialize(c.SpotifyClientId, c.SpotifyClientSecret, c.SpotifyRedirectUri, jsonConfig, c)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize Spotify service")
 	}
